@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Environment Variables Test</title>
+</head>
+<body>
+    <h1>Environment Variables Test</h1>
+    <div id="results"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resultsDiv = document.getElementById('results');
+            
+            // Test Vite environment variables
+            const newApiKey = import.meta.env.VITE_NEW_API_KEY;
+            const providerModel = import.meta.env.VITE_PROVIDER_MODEL;
+            const apiEndpoint = import.meta.env.VITE_API_ENDPOINT;
+            
+            resultsDiv.innerHTML = `
+                <h2>Vite Environment Variables:</h2>
+                <p>VITE_NEW_API_KEY: ${newApiKey ? newApiKey.substring(0, 8) + '...' : 'Not set'}</p>
+                <p>VITE_PROVIDER_MODEL: ${providerModel || 'Not set'}</p>
+                <p>VITE_API_ENDPOINT: ${apiEndpoint || 'Not set'}</p>
+                
+                <h2>Process Environment Variables:</h2>
+                <p>process.env.VITE_NEW_API_KEY: ${process.env.VITE_NEW_API_KEY ? process.env.VITE_NEW_API_KEY.substring(0, 8) + '...' : 'Not set'}</p>
+                <p>process.env.VITE_PROVIDER_MODEL: ${process.env.VITE_PROVIDER_MODEL || 'Not set'}</p>
+                <p>process.env.VITE_API_ENDPOINT: ${process.env.VITE_API_ENDPOINT || 'Not set'}</p>
+            `;
+        });
+    </script>
+</body>
+</html>

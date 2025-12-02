@@ -1,0 +1,55 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Build environment variables - available to build process and functions
+[build.environment]
+  NODE_VERSION = "18"
+  NEW_API_KEY = "ddc-a4f-07842c4bb9ae4099b39833a26a4acf46"
+  PROVIDER_MODEL = "provider-4/imagen-3.5"
+  API_ENDPOINT = "https://api.a4f.co/v1/images/generations"
+  PUBLIC_APP_BASE_URL = "https://veronikaextra.netlify.app"
+
+[dev]
+  command = "npm run dev"
+  port = 8888
+  targetPort = 3000
+
+[functions]
+  directory = "netlify/functions"
+  # Increase timeout to handle multiple image generation requests
+  # Maximum is 26 seconds for free tier, 60 seconds for paid tiers
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/global-settings"
+  to = "/.netlify/functions/global-settings"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Production context environment variables
+[context.production.environment]
+  NEW_API_KEY = "ddc-a4f-07842c4bb9ae4099b39833a26a4acf46"
+  PROVIDER_MODEL = "provider-4/imagen-3.5"
+  API_ENDPOINT = "https://api.a4f.co/v1/images/generations"
+  PUBLIC_APP_BASE_URL = "https://veronikaextra.netlify.app"
+
+# Development context environment variables
+[context.dev.environment]
+  NEW_API_KEY = "ddc-a4f-07842c4bb9ae4099b39833a26a4acf46"
+  PROVIDER_MODEL = "provider-4/imagen-3.5"
+  API_ENDPOINT = "https://api.a4f.co/v1/images/generations"
+  PUBLIC_APP_BASE_URL = "http://localhost:8888"
+
+# Specific function configuration for image generation
+[functions.generate-images]
+  timeout = 26

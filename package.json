@@ -1,0 +1,32 @@
+{
+  "name": "veronikaextra-images",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:netlify": "netlify dev",
+    "build": "vite build --debug",
+    "preview": "vite preview",
+    "test:env": "node test-env.js",
+    "test:api": "node test-api.js"
+  },
+  "dependencies": {
+    "@netlify/functions": "^5.1.0",
+    "dotenv": "^16.4.5",
+    "framer-motion": "^11.0.24",
+    "node-fetch": "^3.3.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@unhead/react": "^2.0.0",
+    "react-router-dom": "^7.9.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/react-helmet-async": "^1.0.1",
+    "@vercel/node": "^5.5.13",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
