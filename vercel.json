@@ -1,27 +1,16 @@
 {
-  "version": 2,
-  "builds": [
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["dist/**"]
-      }
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "NEW_API_KEY": "@new_api_key",
-    "PROVIDER_MODEL": "@provider_model",
-    "API_ENDPOINT": "@api_endpoint"
-  }
+  ]
 }

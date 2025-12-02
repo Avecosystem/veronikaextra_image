@@ -35,8 +35,9 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: undefined,
         }
-      }
+      },
+      chunkSizeWarningLimit: 1000
     },
-    
-    };
+
+  };
 });

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: veronikaextra-images
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: NEW_API_KEY
+        sync: false
+      - key: PUBLIC_APP_BASE_URL
+        sync: false
