@@ -2,6 +2,12 @@
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // Define the path to the global settings file
 const SETTINGS_FILE_PATH = join(__dirname, '..', '..', 'data', 'global-settings.json');
 
@@ -103,7 +109,7 @@ export default async function handler(event: any, context: any) {
                     body: JSON.stringify({ success: false, message: 'Invalid request body' })
                 };
             }
-            
+
             const { key, value } = bodyData;
 
             if (!key) {
@@ -115,10 +121,10 @@ export default async function handler(event: any, context: any) {
             }
 
             settingsStore[key] = value;
-            
+
             // Save settings to file
             const saveSuccess = await saveSettings(settingsStore);
-            
+
             if (!saveSuccess) {
                 return {
                     statusCode: 500,
