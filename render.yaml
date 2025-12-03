@@ -8,10 +8,10 @@ services:
       - key: NODE_VERSION
         value: 18
       - key: NEW_API_KEY
-        sync: false
+        value: ddc-a4f-07842c4bb9ae4099b39833a26a4acf46
       - key: PROVIDER_MODEL
         value: provider-4/imagen-3.5
       - key: API_ENDPOINT
         value: https://api.a4f.co/v1/images/generations
       - key: PUBLIC_APP_BASE_URL
-        sync: false
+        value: https://veronikaextra-image.onrender.com
