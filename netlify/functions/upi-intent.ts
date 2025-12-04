@@ -1,4 +1,10 @@
-export default async function handler(request: Request) {
+import { Handler } from '@netlify/functions';
+import prisma from '../../lib/prisma';
+
+const UPI_APP_ID = process.env.UPI_APP_ID;
+const UPI_SECRET_KEY = process.env.UPI_SECRET_KEY;
+
+export const handler: Handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Origin': '*',
@@ -7,31 +13,29 @@ export default async function handler(request: Request) {
     'Content-Type': 'application/json'
   };
 
-  if (request.method === 'OPTIONS') {
-    return new Response('', { status: 200, headers });
-  }
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ message: 'Method Not Allowed' }), { status: 405, headers });
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
   }
 
-  const appId = process.env.UPI_APP_ID;
-  const secretKey = process.env.UPI_SECRET_KEY;
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers, body: JSON.stringify({ message: 'Method Not Allowed' }) };
+  }
 
-  if (!appId || !secretKey) {
-    return new Response(JSON.stringify({ message: 'Server Configuration Error: UPI_APP_ID or UPI_SECRET_KEY missing.' }), { status: 500, headers });
+  if (!UPI_APP_ID || !UPI_SECRET_KEY) {
+    return { statusCode: 500, headers, body: JSON.stringify({ message: 'Server Configuration Error: UPI_APP_ID or UPI_SECRET_KEY missing.' }) };
   }
 
   try {
-    const body = await request.json();
-    const { orderId, amount, returnUrl, email, name, phone = '9999999999' } = body || {};
+    const { orderId, amount, returnUrl, email, name, phone = '9999999999', userId, credits } = JSON.parse(event.body || '{}');
 
-    if (!orderId || !amount || !returnUrl || !email || !name) {
-      return new Response(JSON.stringify({ message: 'Invalid request. Missing required fields.' }), { status: 400, headers });
+    if (!orderId || !amount || !returnUrl || !email || !name || !userId || !credits) {
+      return { statusCode: 400, headers, body: JSON.stringify({ message: 'Invalid request. Missing required fields.' }) };
     }
 
     const customerId = (email || name || orderId).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 45);
     const baseUrl = (process.env.PUBLIC_APP_BASE_URL || 'https://veronikaextra-image.onrender.com').replace(/\/$/, '');
     const httpsReturnUrl = `${baseUrl}/#/profile?order_id={order_id}&status={order_status}`;
+
     const payload = {
       order_id: orderId,
       order_amount: Number(amount),
@@ -50,25 +54,35 @@ export default async function handler(request: Request) {
     const response = await fetch('https://api.cashfree.com/pg/orders', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-client-id': appId,
-        'x-client-secret': secretKey,
-        'x-api-version': '2022-01-01'
+        'x-client-id': UPI_APP_ID,
+        'x-client-secret': UPI_SECRET_KEY,
+        'x-api-version': '2022-01-01',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
     });
 
     const data = await response.json();
     if (!response.ok) {
-      return new Response(JSON.stringify({ message: data.message || 'Payment Gateway Error' }), { status: 500, headers });
+      return { statusCode: 500, headers, body: JSON.stringify({ message: data.message || 'Payment Gateway Error' }) };
     }
 
-    if (data && data.payment_link) {
-      return new Response(JSON.stringify({ payLink: data.payment_link }), { status: 200, headers });
-    }
+    // Create transaction record in database
+    await prisma.transaction.create({
+      data: {
+        userId: parseInt(userId),
+        orderId,
+        amount: Number(amount),
+        currency: 'INR',
+        credits: Number(credits),
+        gateway: 'UPI',
+        status: 'pending'
+      }
+    });
 
-    return new Response(JSON.stringify({ message: 'Payment link not returned by gateway.' }), { status: 500, headers });
-  } catch (error: any) {
-    return new Response(JSON.stringify({ message: error?.message || 'Unexpected error' }), { status: 500, headers });
+    return { statusCode: 200, headers, body: JSON.stringify({ payLink: data.payment_link }) };
+  } catch (e: any) {
+    console.error('UPI Intent Error:', e);
+    return { statusCode: 500, headers, body: JSON.stringify({ message: e?.message || 'Unexpected error' }) };
   }
-}
+};

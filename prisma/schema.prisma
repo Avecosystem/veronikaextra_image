@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  name         String
+  country      String    @default("India")
+  credits      Float     @default(0)
+  isAdmin      Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  transactions    Transaction[]
+  paymentRequests PaymentRequest[]
+  creditHistory   CreditHistory[]
+  sessions        Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model GlobalSettings {
+  id                Int      @id @default(1) // Singleton ID
+  globalNotice      String   @default("")
+  creditsPageNotice String   @default("")
+  termsOfService    String   @default("")
+  privacyPolicy     String   @default("")
+  
+  // Stored as JSON strings
+  socialMediaLinks  String   @default("{}") 
+  creditPlans       String   @default("[]")
+  contactDetails    String   @default("[]")
+  
+  updatedAt         DateTime @updatedAt
+}
+
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  orderId     String   @unique
+  amount      Float
+  currency    String
+  credits     Float
+  gateway     String   // "UPI", "OXPAY", "CASHFREE"
+  status      String   // "pending", "completed", "failed"
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+}
+
+model PaymentRequest {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  plan      String
+  credits   Float
+  amount    Float
+  utrCode   String
+  date      String
+  note      String?
+  status    String   // "pending", "approved", "rejected"
+  createdAt DateTime @default(now())
+}
+
+model CreditHistory {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  amount      Float
+  type        String   // "added", "deducted"
+  description String?
+  createdAt   DateTime @default(now())
+}

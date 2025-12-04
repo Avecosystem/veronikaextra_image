@@ -1,7 +1,9 @@
+import { Handler } from '@netlify/functions';
+import prisma from '../../lib/prisma';
 import { formatApiError } from '../../utils/apiUtils';
 import { OXPAY_MERCHANT_ID as MERCHANT_CONST, OXPAY_API_ID as API_CONST, OXPAY_PAYMENT_URL_BASE } from '../../constants';
 
-export default async function handler(request: Request) {
+export const handler: Handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Origin': '*',
@@ -10,27 +12,26 @@ export default async function handler(request: Request) {
     'Content-Type': 'application/json'
   };
 
-  if (request.method === 'OPTIONS') {
-    return new Response('', { status: 200, headers });
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
   }
 
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ message: 'Method Not Allowed' }), { status: 405, headers });
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers, body: JSON.stringify({ message: 'Method Not Allowed' }) };
   }
 
   const merchantId = process.env.OXAPAY_MERCHANT_ID || MERCHANT_CONST;
   const apiId = process.env.OXAPAY_API_ID || API_CONST;
 
   if (!merchantId) {
-    return new Response(JSON.stringify({ message: 'Server Configuration Error: OXAPAY_MERCHANT_ID missing.' }), { status: 500, headers });
+    return { statusCode: 500, headers, body: JSON.stringify({ message: 'Server Configuration Error: OXAPAY_MERCHANT_ID missing.' }) };
   }
 
   try {
-    const bodyData = await request.json();
-    const { orderId, credits, amount, returnUrl, email, name } = bodyData || {};
+    const { orderId, credits, amount, returnUrl, email, name, userId } = JSON.parse(event.body || '{}');
 
-    if (!orderId || !credits || !amount || !returnUrl || !email) {
-      return new Response(JSON.stringify({ message: 'Invalid request. Missing required fields.' }), { status: 400, headers });
+    if (!orderId || !credits || !amount || !returnUrl || !email || !userId) {
+      return { statusCode: 400, headers, body: JSON.stringify({ message: 'Invalid request. Missing required fields.' }) };
     }
 
     const formattedAmount = Number(Number(amount).toFixed(2));
@@ -42,7 +43,7 @@ export default async function handler(request: Request) {
       oxapayHeaders['general_api_key'] = apiId;
     }
 
-    const oxapayRequest = fetch('https://api.oxapay.com/merchants/request', {
+    const response = await fetch('https://api.oxapay.com/merchants/request', {
       method: 'POST',
       headers: oxapayHeaders,
       body: JSON.stringify({
@@ -58,27 +59,47 @@ export default async function handler(request: Request) {
         email
       })
     });
-    const timeoutMs = 6000;
-    const timeout = new Promise<Response>((resolve) => {
-      setTimeout(() => {
-        resolve(new Response(JSON.stringify({ timeout: true }), { status: 200 }));
-      }, timeoutMs);
-    });
-    const response = await Promise.race([oxapayRequest, timeout]);
-    const result = await response.json().catch(() => ({ timeout: true }));
+
+    const result = await response.json();
 
     if (result.result === 100 && result.payLink) {
-      return new Response(JSON.stringify({ payLink: result.payLink }), { status: 200, headers });
+      // Create transaction record in database
+      await prisma.transaction.create({
+        data: {
+          userId: parseInt(userId),
+          orderId,
+          amount: formattedAmount,
+          currency: 'USD',
+          credits: Number(credits),
+          gateway: 'OXPAY',
+          status: 'pending'
+        }
+      });
+
+      return { statusCode: 200, headers, body: JSON.stringify({ payLink: result.payLink }) };
     }
 
-    // Fallback to public payment page if API didn't return a specific payLink or timed out
+    // Fallback to public payment page if API didn't return a specific payLink
     if (OXPAY_PAYMENT_URL_BASE) {
-      return new Response(JSON.stringify({ payLink: OXPAY_PAYMENT_URL_BASE, message: result.message || 'Using fallback pay link' }), { status: 200, headers });
+      await prisma.transaction.create({
+        data: {
+          userId: parseInt(userId),
+          orderId,
+          amount: formattedAmount,
+          currency: 'USD',
+          credits: Number(credits),
+          gateway: 'OXPAY',
+          status: 'pending'
+        }
+      });
+
+      return { statusCode: 200, headers, body: JSON.stringify({ payLink: OXPAY_PAYMENT_URL_BASE, message: result.message || 'Using fallback pay link' }) };
     }
 
-    return new Response(JSON.stringify({ message: result.message || 'Payment Gateway Error' }), { status: 500, headers });
+    return { statusCode: 500, headers, body: JSON.stringify({ message: result.message || 'Payment Gateway Error' }) };
   } catch (error: any) {
     const formatted = formatApiError(error);
-    return new Response(JSON.stringify({ message: formatted }), { status: 500, headers });
+    console.error('Oxapay Intent Error:', error);
+    return { statusCode: 500, headers, body: JSON.stringify({ message: formatted }) };
   }
-}
+};
