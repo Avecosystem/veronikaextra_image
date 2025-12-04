@@ -5,9 +5,13 @@ declare global {
     var prisma: PrismaClient | undefined;
 }
 
-// Simple, standard Prisma initialization
-// Prisma 7 requires passing at least an empty object
-const prisma = global.prisma || new PrismaClient({});
+// Explicitly configure Prisma for Node.js (library engine)
+// Pass datasourceUrl to avoid "client" engine type error
+const databaseUrl = process.env.DATABASE_URL || 'file:./dev.db';
+
+const prisma = global.prisma || new PrismaClient({
+    datasourceUrl: databaseUrl
+});
 
 if (process.env.NODE_ENV !== 'production') {
     global.prisma = prisma;
