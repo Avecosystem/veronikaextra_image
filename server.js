@@ -63,7 +63,10 @@ await Promise.all([
     registerApiHandler('oxapay-intent', './netlify/functions/oxapay-intent.ts'),
     registerApiHandler('upi-intent', './netlify/functions/upi-intent.ts'),
     registerApiHandler('cashfree-webhook', './netlify/functions/cashfree-webhook.ts'),
-    registerApiHandler('cashfree-order-status', './netlify/functions/cashfree-order-status.ts')
+    registerApiHandler('cashfree-order-status', './netlify/functions/cashfree-order-status.ts'),
+    registerApiHandler('auth-register', './netlify/functions/auth-register.ts'),
+    registerApiHandler('auth-login', './netlify/functions/auth-login.ts'),
+    registerApiHandler('user-profile', './netlify/functions/user-profile.ts')
 ]);
 
 // API endpoint handler
