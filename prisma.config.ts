@@ -7,4 +7,7 @@ export default defineConfig({
     migrations: {
         seed: 'tsx prisma/seed.ts',
     },
+    client: {
+        engineType: 'library'
+    }
 });
