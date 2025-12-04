@@ -35,8 +35,7 @@ const Button = ({
     <motion.button
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${(disabled || loading) ? disabledStyles : ''
-        } ${className}`}
+      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${(disabled || loading) ? disabledStyles : ''} ${className}`}
       disabled={disabled || loading}
       {...props}
     >
