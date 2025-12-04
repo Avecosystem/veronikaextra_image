@@ -51,11 +51,12 @@ const LandingPage = () => {
         if (response.success) {
           setGlobalNotice(response.data);
         } else {
-          setNoticeError(response.message || 'Failed to fetch global notice.');
+          // Silently fail - don't show error to users
+          console.log('Notice not available:', response.message);
         }
       } catch (err) {
-        console.error('Error fetching global notice:', err);
-        setNoticeError('An unexpected error occurred while fetching global notice.');
+        // Silently fail - don't show error to users
+        console.log('Error fetching global notice:', err);
       }
     };
     fetchNotice();
@@ -106,18 +107,7 @@ const LandingPage = () => {
             </div>
           </motion.div>
         )}
-        {noticeError && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full max-w-6xl mb-8"
-          >
-            <div className="p-4 text-center text-red-500 bg-red-500/10 border-red-500/50 rounded-2xl backdrop-filter backdrop-blur-lg border shadow-glass-dark dark:shadow-glass-light">
-              <p className="font-semibold text-lg">Error: {noticeError}</p>
-            </div>
-          </motion.div>
-        )}
+        {/* Notice error removed - fails silently */}
 
         {/* Hero Section */}
         <motion.section

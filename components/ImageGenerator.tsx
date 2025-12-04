@@ -34,11 +34,12 @@ const ImageGenerator = () => {
         if (response.success) {
           setGlobalNotice(response.data);
         } else {
-          setNoticeError(response.message || 'Failed to fetch global notice.');
+          // Silently fail - don't show error to users
+          console.log('Notice not available:', response.message);
         }
       } catch (err) {
-        console.error('Error fetching global notice:', err);
-        setNoticeError('An unexpected error occurred while fetching global notice.');
+        // Silently fail - don't show error to users
+        console.log('Error fetching global notice:', err);
       }
     };
     fetchNotice();
@@ -70,7 +71,7 @@ const ImageGenerator = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-    
+
     try {
       const token = localStorage.getItem('jwt_token');
       if (!token) {
@@ -130,15 +131,15 @@ const ImageGenerator = () => {
       </Head>
       <div className="flex flex-col items-center justify-center p-4 md:p-6 lg:p-8 min-h-[calc(100vh-160px)]">
         {/* Global Notice Display */}
-        {(globalNotice || noticeError) && (
+        {globalNotice && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="w-full max-w-4xl mb-6"
           >
-            <GlassCard className={`p-4 text-center ${noticeError ? 'bg-red-500/20 border-red-500/50' : 'bg-accent/20 border-accent/50'}`}>
-              <p className="font-semibold text-base md:text-lg">{noticeError || globalNotice}</p>
+            <GlassCard className="p-4 text-center bg-accent/20 border-accent/50">
+              <p className="font-semibold text-base md:text-lg">{globalNotice}</p>
             </GlassCard>
           </motion.div>
         )}
@@ -209,7 +210,7 @@ const ImageGenerator = () => {
             >
               Generate Masterpiece ({IMAGE_COST * numberOfImages} Credits)
             </Button>
-            
+
             {/* Provisioning Hardware Message - shown below button during loading */}
             {loading && (
               <GlassCard className="text-center py-4 animate-float mt-4">
@@ -225,7 +226,7 @@ const ImageGenerator = () => {
                 </p>
               </GlassCard>
             )}
-            
+
             {!isAuthenticated && (
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                 Please log in to start generating.

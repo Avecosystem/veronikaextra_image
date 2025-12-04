@@ -41,18 +41,20 @@ const CreditsPage = () => {
         if (globalResponse.success) {
           setGlobalNotice(globalResponse.data);
         } else {
-          setNoticeError(globalResponse.message || 'Failed to fetch global notice.');
+          // Silently fail - don't show error to users
+          console.log('Global notice not available:', globalResponse.message);
         }
 
         const creditsPageResponse: ApiResponse<string> = await backendApi.getCreditsPageNotice();
         if (creditsPageResponse.success) {
           setCreditsPageNotice(creditsPageResponse.data);
         } else {
-          setNoticeError(creditsPageResponse.message || 'Failed to fetch credits page notice.');
+          // Silently fail - don't show error to users
+          console.log('Credits page notice not available:', creditsPageResponse.message);
         }
       } catch (err) {
-        console.error('Error fetching notices for CreditsPage:', err);
-        setNoticeError('An unexpected error occurred while fetching notices.');
+        // Silently fail - don't show error to users
+        console.log('Error fetching notices for CreditsPage:', err);
       }
     };
     fetchNotices();
@@ -308,18 +310,7 @@ const CreditsPage = () => {
             </GlassCard>
           </motion.div>
         )}
-        {noticeError && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full max-w-4xl mb-6"
-          >
-            <GlassCard className="p-4 text-center bg-red-500/20 border-red-500/50">
-              <p className="font-semibold text-lg">Error: {noticeError}</p>
-            </GlassCard>
-          </motion.div>
-        )}
+        {/* Notice error removed - fails silently */}
 
         {/* Page Header */}
         <motion.div
@@ -474,7 +465,7 @@ const CreditsPage = () => {
                 )}
               </div>
 
-              
+
 
               {/* Form Feedback */}
               {formError && (
